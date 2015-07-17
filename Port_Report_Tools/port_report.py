@@ -9,6 +9,10 @@
 #the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc.,
 #51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+"""Revision 1.14 07/17/15
+   * Fixed some spelling. Such as 'retreive_communities'
+   
+   
 """Revision 1.13 10/01/09
     * Fixed line 348 as per christianha. return nmac.lower()
       This fix will allow you to pass a MAC in all uppercase and still match though the switch is responding in lowercase.
@@ -235,7 +239,7 @@ def main():
             sbrand = switch.get_sbrand()
             connected_macs = []
             if ( re.search("Cisco|PROCURVE", switchtype, re.IGNORECASE ) ):
-                lcomm, lvlan = switch.retreive_communities( )
+                lcomm, lvlan = switch.retrieve_communities( )
                 if verbose:  print(ctime(), "Retreiving Community Strings\n %s" % ( lcomm ))
                 for i in range(len(lcomm)):
                     mdict = switch.return_mac_by_ifIndex( lcomm[i], lvlan[i] )
@@ -288,7 +292,7 @@ def write_report( dev, entIpList, tcount = [] ):
     count = 0
     conn_output = open("connnected_ports_on_"+dev+".csv", "a")
     if ( re.search("Cisco|PROCURVE", switchtype, re.IGNORECASE ) ):
-        lcomm, lvlan = switch.retreive_communities( )
+        lcomm, lvlan = switch.retrieve_communities( )
         if verbose:  print(ctime(), "Retreiving Community Strings\n %s" % ( lcomm ))
         for i in range(len(lcomm)):
             macout = switch.switch_report( lcomm[i], lvlan[i], conn_output )
@@ -583,7 +587,7 @@ class followSwitch(object):
         return tuple(ifIndexList)
 
 
-    def retreive_communities( self ):
+    def retrieve_communities( self ):
         """ This function does exactly what it is defined as. It will return a list
             of Community Strings from the entLogicalCommunity OID Table.
             As well as grab the associated vlan ID. Then return both in a tuple"""
@@ -662,7 +666,7 @@ class followSwitch(object):
         snmperror, switchtype = get( self.switch, self.community, oTable["sysDescr"], 2)
         mTable = ifIndex = None
         if ( re.search("Cisco|HP", self.sbrand, re.IGNORECASE) ):
-            lcomm, lvlan = self.retreive_communities( )
+            lcomm, lvlan = self.retrieve_communities( )
             if verbose:  print(ctime(), "Retreiving Community Strings\n %s" % ( lcomm ))
             for i in range(len(lcomm)):
                 mTable, ifIndex = self.find_mac_or_ip( self.mac, nip, lcomm[i], lvlan[i] )
