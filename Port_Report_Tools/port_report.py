@@ -10,8 +10,10 @@
 #51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 """Revision 1.14 07/17/15
-   * Fixed some spelling. Such as 'retreive_communities'
-   
+   * Fixed some spelling. Such as 'retreive_communities"
+   * Added more verbose statements.
+   * Added some comments by the dictionaries
+"""
    
 """Revision 1.13 10/01/09
     * Fixed line 348 as per christianha. return nmac.lower()
@@ -139,7 +141,7 @@ def usage():
 
 
 def main():
-    if verbose: print(ctime(), " Main Started")
+    if verbose: print(ctime(), " Main Started ")
     if ( community and device and ( mac or ip or pname or report ) ):
         snmperror, switchtype = get( device, community, oTable["sysDescr"], 0 )
         switchtype = str(switchtype)
@@ -164,6 +166,7 @@ def main():
             switch.set_speed()
             switch.set_port_name()
             switch.set_phys_addr()
+            if verbose: print("\nYOu should get the switchtype after this\n")
             if verbose: print(switchtype)
             mTable = ""
             if mac:
@@ -177,7 +180,7 @@ def main():
                 nip = ip
                 nmac = switch.findMacByIp( nip )
                 if nmac == None:
-                    print("This IPAddress is not in the ARP table")
+                    print("This IP Address is not in the ARP table")
                     sys.exit(1)
 
             if ( re.search("Cisco|PROCURVE|Nortel|ERS|Foundry", switchtype, re.IGNORECASE ) ):
@@ -270,7 +273,7 @@ def main():
             if follow:
                 for item in count:
                     tcount += item
-                print("Total MAC Addresses found: %d" % tcount)
+                print("Total MAC Address(es) found: %d" % tcount)
 
 def write_report( dev, entIpList, tcount = [] ):
     print("Running Switch Report on %s" % ( dev ))
@@ -667,7 +670,7 @@ class followSwitch(object):
         mTable = ifIndex = None
         if ( re.search("Cisco|HP", self.sbrand, re.IGNORECASE) ):
             lcomm, lvlan = self.retrieve_communities( )
-            if verbose:  print(ctime(), "Retreiving Community Strings\n %s" % ( lcomm ))
+            if verbose:  print(ctime(), "Retrieving Community Strings\n %s" % ( lcomm ))
             for i in range(len(lcomm)):
                 mTable, ifIndex = self.find_mac_or_ip( self.mac, nip, lcomm[i], lvlan[i] )
                 if len(mTable) >= 1:
@@ -677,7 +680,7 @@ class followSwitch(object):
         return mTable, ifIndex
 
     def find_mac_or_ip( self, nmac, nip, comm, vlanID ):
-        if verbose: print(ctime(), " In generic_mac_or_ip Function")
+        if verbose: print(ctime(), " In generic_mac_or_ip Function ")
         if verbose: print(nmac, nip, self.switch, comm)
         macVlanTable = walk( self.switch, comm, oTable["dot1dTpFdbPort"] )
         if verbose: print(macVlanTable)
@@ -963,7 +966,7 @@ class followSwitch(object):
                     self.new_ifIndex = ifIndex_pagp_list[0]
         return (self.new_ifIndex, count)
 
-
+# Dictionaries
 
 
 cdpTable = {
@@ -971,13 +974,13 @@ cdpTable = {
            }
 
 pagpTable = {
-            "pagpGroupIfIndex" : (1,3,6,1,4,1,9,9,98,1,1,1,1,8)
+            "pagpGroupIfIndex" : (1,3,6,1,4,1,9,9,98,1,1,1,1,8) # Not in the HP mibs
             }
 oTable = {
-           "entLogicalCommunity" : (1,3,6,1,2,1,47,1,2,1,1,4),
-           "entPhysicalModelName" : (1,3,6,1,2,1,47,1,1,1,1,13,1),
-           "entLogicalDescr" : (1,3,6,1,2,1,47,1,2,1,1,2),
-           "dot1dBasePort" : (1,3,6,1,2,1,17,1,4,1,1),
+           "entLogicalCommunity" : (1,3,6,1,2,1,47,1,2,1,1,4), # Returns SNMP Comm String
+           "entPhysicalModelName" : (1,3,6,1,2,1,47,1,1,1,1,13,1), #Returns Model number, works on newer HP switches not older ones
+           "entLogicalDescr" : (1,3,6,1,2,1,47,1,2,1,1,2), # Returns VLAN info
+           "dot1dBasePort" : (1,3,6,1,2,1,17,1,4,1,1), # Returns list of interfaces
            "dot1dTpFdbPort" : (1,3,6,1,2,1,17,4,3,1,2),
            "dot1dBasePortIfIndex" : (1,3,6,1,2,1,17,1,4,1,2),
            "dot1dTpFdbAddress" :  (1,3,6,1,2,1,17,4,3,1,1),
