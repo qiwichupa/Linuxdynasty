@@ -166,7 +166,7 @@ def main():
             switch.set_speed()
             switch.set_port_name()
             switch.set_phys_addr()
-            if verbose: print("\nYOu should get the switchtype after this\n")
+            if verbose: print("\nYou should get the switchtype after this\n")
             if verbose: print(switchtype)
             mTable = ""
             if mac:
@@ -243,7 +243,7 @@ def main():
             connected_macs = []
             if ( re.search("Cisco|PROCURVE", switchtype, re.IGNORECASE ) ):
                 lcomm, lvlan = switch.retrieve_communities( )
-                if verbose:  print(ctime(), "Retreiving Community Strings\n %s" % ( lcomm ))
+                if verbose:  print(ctime(), "Retrieving Community Strings\n %s" % ( lcomm ))
                 for i in range(len(lcomm)):
                     mdict = switch.return_mac_by_ifIndex( lcomm[i], lvlan[i] )
                     if mdict:
