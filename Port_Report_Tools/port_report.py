@@ -166,24 +166,24 @@ def main():
             switch.set_speed()
             switch.set_port_name()
             switch.set_phys_addr()
-            if verbose: print("\nYou should get the switchtype after this\n")
+            if verbose: print("\nYou should get the switchtype after this:\n")
             if verbose: print(switchtype)
             mTable = ""
             if mac:
                 nmac = mac
                 nmac, valid = verify_mac( nmac )
                 if not valid:
-                    print("you mac %s is in the wrong format" % (mac))
+                    print("Your mac %s is in the wrong format" % (mac))
                     sys.exit(1)
                 nip = switch.findIpByMac( nmac )
             if ip:
                 nip = ip
                 nmac = switch.findMacByIp( nip )
                 if nmac == None:
-                    print("This IP Address is not in the ARP table")
+                    print("This IP Address, %s , is not in the ARP table" % (ip))
                     sys.exit(1)
 
-            if ( re.search("Cisco|PROCURVE|Nortel|ERS|Foundry", switchtype, re.IGNORECASE ) ):
+            if ( re.search("Cisco|PROCURVE|HP|Nortel|ERS|Foundry", switchtype, re.IGNORECASE ) ):
                 mTable, ifIndex = switch.find_mac( nmac, nip )
                 count = 0
                 sswitch = dswitch
@@ -241,9 +241,9 @@ def main():
             ifName = switch.get_ifName()
             sbrand = switch.get_sbrand()
             connected_macs = []
-            if ( re.search("Cisco|PROCURVE", switchtype, re.IGNORECASE ) ):
+            if ( re.search("Cisco|PROCURVE|HP", switchtype, re.IGNORECASE ) ):
                 lcomm, lvlan = switch.retrieve_communities( )
-                if verbose:  print(ctime(), "Retrieving Community Strings\n %s" % ( lcomm ))
+                if verbose:  print(ctime(), "Retrieving Community Strings %s\n" % ( lcomm ))
                 for i in range(len(lcomm)):
                     mdict = switch.return_mac_by_ifIndex( lcomm[i], lvlan[i] )
                     if mdict:
@@ -294,7 +294,7 @@ def write_report( dev, entIpList, tcount = [] ):
     switch.set_alias()
     count = 0
     conn_output = open("connnected_ports_on_"+dev+".csv", "a")
-    if ( re.search("Cisco|PROCURVE", switchtype, re.IGNORECASE ) ):
+    if ( re.search("Cisco|PROCURVE|HP", switchtype, re.IGNORECASE ) ):
         lcomm, lvlan = switch.retrieve_communities( )
         if verbose:  print(ctime(), "Retreiving Community Strings\n %s" % ( lcomm ))
         for i in range(len(lcomm)):
@@ -470,6 +470,8 @@ class followSwitch(object):
         if ( re.search("Cisco", self.switchtype, re.IGNORECASE ) ):
             self.sbrand = "Cisco"
         elif ( re.search("PROCURVE", self.switchtype, re.IGNORECASE ) ):
+            self.sbrand = "PROCURVE"
+        elif ( re.search("HP", self.switchtype, re.IGNORECASE ) ):
             self.sbrand = "HP"
         elif ( re.search("Nortel|ERS", self.switchtype, re.IGNORECASE ) ):
             self.sbrand = "Nortel"
@@ -628,6 +630,10 @@ class followSwitch(object):
         if ( pfield.search(pname) ):
             gen_pname.append(pfield.match(pname).group(1))
             gen_pname.append(pfield.match(pname).group(2))
+            if ( self.sbrand == "PROCURVE" ):
+                new_pname = hpTable[str(gen_pname[0])]+str(gen_pname[1])
+                count += 1
+                if verbose: print(new_pname)
             if ( self.sbrand == "HP" ):
                 new_pname = hpTable[str(gen_pname[0])]+str(gen_pname[1])
                 count += 1
@@ -668,7 +674,7 @@ class followSwitch(object):
         self.mac = nmac
         snmperror, switchtype = get( self.switch, self.community, oTable["sysDescr"], 2)
         mTable = ifIndex = None
-        if ( re.search("Cisco|HP", self.sbrand, re.IGNORECASE) ):
+        if ( re.search("Cisco|PROCURVE|HP", self.sbrand, re.IGNORECASE) ):
             lcomm, lvlan = self.retrieve_communities( )
             if verbose:  print(ctime(), "Retrieving Community Strings\n %s" % ( lcomm ))
             for i in range(len(lcomm)):
@@ -680,7 +686,7 @@ class followSwitch(object):
         return mTable, ifIndex
 
     def find_mac_or_ip( self, nmac, nip, comm, vlanID ):
-        if verbose: print(ctime(), " In generic_mac_or_ip Function ")
+        if verbose: print(ctime(), " In generic 'find_mac_or_ip' Function ")
         if verbose: print(nmac, nip, self.switch, comm)
         macVlanTable = walk( self.switch, comm, oTable["dot1dTpFdbPort"] )
         if verbose: print(macVlanTable)
@@ -688,7 +694,7 @@ class followSwitch(object):
         count = 0
         ifIndex = None
         if ( len(macVlanTable) > 0 ):
-            if verbose: print(ctime(), " First If Statement ")
+            if verbose: print(ctime(), " First If Statement in the find_mac_or_ip Function ")
             for macVlan in macVlanTable:
                 cmac = self.convertDecMac(list(macVlan[0][0][-6:]))
                 if re.search(nmac, cmac, re.IGNORECASE):
@@ -970,32 +976,32 @@ class followSwitch(object):
 
 
 cdpTable = {
-            "cdpCacheAddress" : (1,3,6,1,4,1,9,9,23,1,2,1,1,4)
+            "cdpCacheAddress" : (1,3,6,1,4,1,9,9,23,1,2,1,1,4) # CISCO-CDP-MIB
            }
 
 pagpTable = {
             "pagpGroupIfIndex" : (1,3,6,1,4,1,9,9,98,1,1,1,1,8) # Not in the HP mibs
             }
 oTable = {
-           "entLogicalCommunity" : (1,3,6,1,2,1,47,1,2,1,1,4), # Returns SNMP Comm String
-           "entPhysicalModelName" : (1,3,6,1,2,1,47,1,1,1,1,13,1), #Returns Model number, works on newer HP switches not older ones
-           "entLogicalDescr" : (1,3,6,1,2,1,47,1,2,1,1,2), # Returns VLAN info
-           "dot1dBasePort" : (1,3,6,1,2,1,17,1,4,1,1), # Returns list of interfaces
-           "dot1dTpFdbPort" : (1,3,6,1,2,1,17,4,3,1,2),
-           "dot1dBasePortIfIndex" : (1,3,6,1,2,1,17,1,4,1,2),
-           "dot1dTpFdbAddress" :  (1,3,6,1,2,1,17,4,3,1,1),
-           "ifDescr" : (1,3,6,1,2,1,2,2,1,2),
-           "ifName" : (1,3,6,1,2,1,31,1,1,1,1),
-           "ifSpeed" : (1,3,6,1,2,1,2,2,1,5),
-           "ifAlias" : (1,3,6,1,2,1,31,1,1,1,18),
-           "sysName" : (1,3,6,1,2,1,1,5,0),
-           "sysDescr" : (1,3,6,1,2,1,1,1,0),
-           "dot3StatsDuplexStatus" : (1,3,6,1,2,1,10,7,2,1,19),
-           "ifAdminStatus" : (1,3,6,1,2,1,2,2,1,7),
-           "ifOperStatus" : (1,3,6,1,2,1,2,2,1,8),
-           "atPhysAddress" : (1,3,6,1,2,1,3,1,1,2),
-           "ipAdEntAddr" : (1,3,6,1,2,1,4,20,1,1),
-           "ipAdEntIfIndex" : (1,3,6,1,2,1,4,20,1,2)
+           "entLogicalCommunity" : (1,3,6,1,2,1,47,1,2,1,1,4), # Returns SNMP Comm String. HP, PROCURVE, CISCO
+           "entPhysicalModelName" : (1,3,6,1,2,1,47,1,1,1,1,13,1), #Remove the 1. Returns Model number, HP, PROCURVE, CISCO
+           "entLogicalDescr" : (1,3,6,1,2,1,47,1,2,1,1,2), # Returns VLAN info. HP, PROCURVE, CISCO
+           "dot1dBasePort" : (1,3,6,1,2,1,17,1,4,1,1), # Returns list of interfaces. HP, PROCURVE, CISCO
+           "dot1dTpFdbPort" : (1,3,6,1,2,1,17,4,3,1,2), # The learned port used by a MAC. HP, PROCURVE, CISCO
+           "dot1dBasePortIfIndex" : (1,3,6,1,2,1,17,1,4,1,2), # MIB-II Port interface in the bridge. HP, PROCURVE, CISCO
+           "dot1dTpFdbAddress" :  (1,3,6,1,2,1,17,4,3,1,1), # Unicast MAC for which the bridge has forward. HP, PROCURVE, CISCO
+           "ifDescr" : (1,3,6,1,2,1,2,2,1,2), # Map ifIndex to interface name. HP, PROCURVE, CISCO
+           "ifName" : (1,3,6,1,2,1,31,1,1,1,1), # Textual name of the interface. HP, PROCURVE, CISCO
+           "ifSpeed" : (1,3,6,1,2,1,2,2,1,5), # Interface's current bandwidth. HP, PROCURVE, CISCO
+           "ifAlias" : (1,3,6,1,2,1,31,1,1,1,18), # Interface's name or description. HP, PROCURVE, CISCO
+           "sysName" : (1,3,6,1,2,1,1,5), # Removed the 0, didn't work. System Name. HP, PROCURVE, CISCO
+           "sysDescr" : (1,3,6,1,2,1,1,1,0), # Removed the 0, it doesn't work. Basically shows system model number and firmware. HP, PROCURVE, CISCO
+           "dot3StatsDuplexStatus" : (1,3,6,1,2,1,10,7,2,1,19), # Returns the interface duplex. HP, PROCURVE, CISCO
+           "ifAdminStatus" : (1,3,6,1,2,1,2,2,1,7), # Returns interface configured status, like up or down. HP, PROCURVE, CISCO
+           "ifOperStatus" : (1,3,6,1,2,1,2,2,1,8), # Returns interface operational status. HP, PROCURVE, CISCO
+           "atPhysAddress" : (1,3,6,1,2,1,3,1,1,2), # PROCURVE, CISCO, but HP doesn't return anything
+           "ipAdEntAddr" : (1,3,6,1,2,1,4,20,1,1), # Lists all assigned IP addresses. HP, PROCURVE, CISCO
+           "ipAdEntIfIndex" : (1,3,6,1,2,1,4,20,1,2) #HP, PROCURVE, CISCO
          }
 
 hpTable = {"1" : "A", "2" : "B", "3" : "C", "4" : "D", "5" : "E",
