@@ -9,6 +9,10 @@
 #the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc.,
 #51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+"""Revision 1.14~py3 09/11/21
+   * same version for python3
+"""
+
 """Revision 1.14 07/17/15
    * Fixed some spelling. Such as 'retreive_communities"
    * Added more verbose statements.
