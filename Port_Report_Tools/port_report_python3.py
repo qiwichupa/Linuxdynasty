@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #Copyright (C) 2009  Allen Sanabria
 #This program is free software; you can redistribute it and/or modify it under
 #the terms of the GNU General Public License as published by the Free Software Foundation;
@@ -14,7 +14,7 @@
    * Added more verbose statements.
    * Added some comments by the dictionaries
 """
-   
+
 """Revision 1.13 10/01/09
     * Fixed line 348 as per christianha. return nmac.lower()
       This fix will allow you to pass a MAC in all uppercase and still match though the switch is responding in lowercase.
@@ -77,7 +77,8 @@ from socket import gethostbyaddr
 
 try:
     from pysnmp.entity.rfc3413.oneliner import cmdgen
-except Exception, e:
+    from pysnmp.hlapi import IpAddress
+except Exception as e:
     print("You need to download pysnmp and pyasn1", e)
     sys.exit(1)
 
@@ -556,7 +557,7 @@ class followSwitch(object):
 
     def convertOctectMac(self, mack):
         """This Function will convert the OctectString into a Valid MAC Address"""
-        mmap = list(map(hex, list(map(ord, mack)) ))
+        mmap = list(map(hex, list(mack) ))
         cmac = mmap
         for i in range(len(mmap)):
             mmap[i] = re.sub("0x", "", mmap[i])
@@ -566,9 +567,7 @@ class followSwitch(object):
 
     def convertOctectIp(self, hexip):
         """This Function will convert the OctectString into a valid Ip Address"""
-        ip = list(map(hex, list(map(ord, hexip)) ))
-        ip = list(map(hex2dec, ip))
-        ip = re.sub("\,", ".",re.sub("\'|\[|\]|\s","", str(ip)))
+        ip = IpAddress( hexip ).prettyPrint()
         return ip
 
     def convertDecMac(self, mack):
